@@ -1,0 +1,24 @@
+{
+  "name": "platformsh/devrel-bi-php-sdk",
+  "description": "DevRel Business Intelligence PHP SDK",
+  "type": "project",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Platformsh\\DevRelBIPhpSdk\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Thomas di Luccio",
+      "email": "thomas.diluccio@platform.sh"
+    }
+  ],
+  "require": {
+    "symfony/http-client": "^7.0",
+    "symfony/event-dispatcher": "^7.0"
+  },
+  "require-dev": {
+    "symfony/symfony": "^7.0"
+  }
+}
