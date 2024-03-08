@@ -14,6 +14,8 @@ The following environments variables are required to activate the integration:
  - `DEVREL_DATA_PIPELINE_PROJECT`
  - `DEVREL_DATA_PIPELINE_ENDPOINT`
  - `DEVREL_DATA_PIPELINE_TOKEN`
+ - `DEVREL_DATA_PIPELINE_LOG_PAGEVIEWS`
+ - `DEVREL_DATA_PIPELINE_LOG_PROFILES`
 
 ## Symfony
 
