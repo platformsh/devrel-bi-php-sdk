@@ -106,12 +106,12 @@ class DataEventManager
 
     private function shouldLogPageviews(): bool
     {
-        return (bool) ($_ENV['DEVREL_DATA_PIPELINE_LOG_PAGEVIEWS'] ?? false);
+        return filter_var($_ENV['DEVREL_DATA_PIPELINE_LOG_PAGEVIEWS'] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
 
     private function shouldLogProfiles(): bool
     {
-        return (bool) ($_ENV['DEVREL_DATA_PIPELINE_LOG_PROFILES'] ?? false);
+        return filter_var($_ENV['DEVREL_DATA_PIPELINE_LOG_PROFILES'] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
 
     private function isProfiling(): bool
