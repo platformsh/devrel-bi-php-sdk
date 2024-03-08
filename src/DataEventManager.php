@@ -18,14 +18,18 @@ class DataEventManager
         private array $eventDataList = [],
         private array $sharedData = []
     ) {
-        $this->projectName = strtolower($_ENV['DEVREL_DATA_PIPELINE_PROJECT']);
-
-        $eventName = 'pageview';
-        if (array_key_exists('HTTP_X_BLACKFIRE_QUERY', $_SERVER)) {
-            $eventName = 'profile';
+        $this->projectName = strtolower($_ENV['DEVREL_DATA_PIPELINE_PROJECT' ?? '']);
+        if (empty($this->projectName)) {
+            return;
         }
 
-        $this->track(EventData::new($eventName));
+        if ($this->shouldLogPageviews() && !$this->isProfiling()) {
+            $this->track(EventData::new('pageview'));
+        }
+
+        if ($this->shouldLogProfiles() && $this->isProfiling()) {
+            $this->track(EventData::new('profile'));
+        }
     }
 
     public function track(EventData $dataEvent): void
@@ -83,8 +87,7 @@ class DataEventManager
 
     private function checkConfiguration(): bool
     {
-        $projectName = $_ENV['DEVREL_DATA_PIPELINE_PROJECT'] ?? null;
-        if (!$projectName) {
+        if (!$this->projectName) {
             return false;
         }
 
@@ -99,6 +102,21 @@ class DataEventManager
         }
 
         return true;
+    }
+
+    private function shouldLogPageviews(): bool
+    {
+        return (bool) ($_ENV['DEVREL_DATA_PIPELINE_LOG_PAGEVIEWS'] ?? false);
+    }
+
+    private function shouldLogProfiles(): bool
+    {
+        return (bool) ($_ENV['DEVREL_DATA_PIPELINE_LOG_PROFILES'] ?? false);
+    }
+
+    private function isProfiling(): bool
+    {
+        return array_key_exists('HTTP_X_BLACKFIRE_QUERY', $_SERVER);
     }
 
     private function getClientIp(): string
