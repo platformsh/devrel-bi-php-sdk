@@ -5,6 +5,7 @@ namespace Platformsh\DevRelBIPhpSdk;
 use DateTime;
 use DateTimeInterface;
 use Platformsh\DevRelBIPhpSdk\EventData;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -48,17 +49,24 @@ class DataEventManager
             return null;
         }
 
-        return $this->client->request(
-            'POST',
-            $_ENV['DEVREL_DATA_PIPELINE_ENDPOINT'] . '/data/' . $this->projectName . '/batch',
-            [
-                'headers' => [
-                    'Accept' => 'application/json',
-                ],
-                'auth_bearer' => $_ENV['DEVREL_DATA_PIPELINE_TOKEN'],
-                'json' => $this->processEventDataList(),
-            ]
-        );
+        try {
+            return $this->client->request(
+                'POST',
+                $_ENV['DEVREL_DATA_PIPELINE_ENDPOINT'] . '/data/' . $this->projectName . '/batch',
+                [
+                    'timeout' => 1.0,
+                    'headers' => [
+                        'Accept' => 'application/json',
+                    ],
+                    'auth_bearer' => $_ENV['DEVREL_DATA_PIPELINE_TOKEN'],
+                    'json' => $this->processEventDataList(),
+                ]
+            );
+        } catch (TransportExceptionInterface $e) {
+            // ...
+        }
+
+        return null;
     }
 
     private function processEventDataList(): array

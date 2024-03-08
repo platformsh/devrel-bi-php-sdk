@@ -27,11 +27,24 @@ abstract class DataEventSubscriber implements EventSubscriberInterface
             eventDataList: $this->eventDataList,
         );
     }
-    abstract protected function logEvents(RequestEvent $event): void;
 
-    abstract protected function getUserId(RequestEvent $event): ?string;
+    protected function logEvents(RequestEvent $event): void
+    {
+        // Redefine this method to control how the events are logged
+        // $this-log('event-name', ['optional' => 'properties']);
+    }
 
-    abstract protected function getSharedData(RequestEvent $event): array;
+    protected function getUserId(RequestEvent $event): ?string
+    {
+        // Redefine this method to return a userId (this information will be hashed by the pipepline for strict privacy reason)
+        return null;
+    }
+
+    protected function getSharedData(RequestEvent $event): array
+    {
+        // Redefine this method to add extra properties to all events logged by your project
+        return [];
+    }
 
     public function log(string $eventName, ?array $data = []): void
     {
