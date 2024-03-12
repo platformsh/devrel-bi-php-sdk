@@ -73,20 +73,24 @@ class DataEventManager
     {
         return array_map(
             function (EventData $eventData): array {
+                $data = [
+                    'project' => $this->projectName,
+                    'requestUri' => $_SERVER['REQUEST_URI'],
+                    ...$this->getUTMTags(),
+                    ...$this->sharedData,
+                    ...$eventData->getData(),
+                ];
+                if ($this->isProfiling()) {
+                    $data['is_profiling'] = array_key_exists('HTTP_X_BLACKFIRE_QUERY', $_SERVER) ? 'true' : 'false';
+                }
+
                 return [
                     'event' => $this->projectName . ':' . $eventData->getEventName(),
                     'datetime' => (new DateTime('now'))->format(DateTimeInterface::ATOM),
                     'user_agent' => $_SERVER['HTTP_USER_AGENT'],
                     'ip_address' => $this->getClientIp(),
                     'user_id' => $this->userId,
-                    'data' => [
-                        'project' => $this->projectName,
-                        'requestUri' => $_SERVER['REQUEST_URI'],
-                        'is_profiling' => array_key_exists('HTTP_X_BLACKFIRE_QUERY', $_SERVER) ? 'true' : 'false',
-                        ...$this->getUTMTags(),
-                        ...$this->sharedData,
-                        ...$eventData->getData(),
-                    ]
+                    'data' => $data,
                 ];
             },
             $this->eventDataList
