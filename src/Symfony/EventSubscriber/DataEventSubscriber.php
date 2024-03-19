@@ -28,24 +28,6 @@ abstract class DataEventSubscriber implements EventSubscriberInterface
         );
     }
 
-    protected function logEvents(RequestEvent $event): void
-    {
-        // Redefine this method to control how the events are logged
-        // $this-log('event-name', ['optional' => 'properties']);
-    }
-
-    protected function getUserId(RequestEvent $event): ?string
-    {
-        // Redefine this method to return a userId (this information will be hashed by the pipepline for strict privacy reason)
-        return null;
-    }
-
-    protected function getSharedData(RequestEvent $event): array
-    {
-        // Redefine this method to add extra properties to all events logged by your project
-        return [];
-    }
-
     public function log(string $eventName, ?array $data = []): void
     {
         $this->dataEventManager->track(EventData::new($eventName, $data));
@@ -65,7 +47,7 @@ abstract class DataEventSubscriber implements EventSubscriberInterface
 
     public function onFinishRequestEvent(FinishRequestEvent $event): void
     {
-        $this->dataEventManager->sync();
+        $this->sync();
     }
 
     public static function getSubscribedEvents()
@@ -75,5 +57,28 @@ abstract class DataEventSubscriber implements EventSubscriberInterface
             FinishRequestEvent::class => 'onFinishRequestEvent',
             DataEvent::class => 'onDataEvent',
         ];
+    }
+
+    protected function logEvents(RequestEvent $event): void
+    {
+        // Redefine this method to control how the events are logged
+        // $this-log('event-name', ['optional' => 'properties']);
+    }
+
+    protected function getUserId(RequestEvent $event): ?string
+    {
+        // Redefine this method to return a userId (this information will be hashed by the pipepline for strict privacy reason)
+        return null;
+    }
+
+    protected function getSharedData(RequestEvent $event): array
+    {
+        // Redefine this method to add extra properties to all events logged by your project
+        return [];
+    }
+
+    protected function sync(?callable $func = null): void
+    {
+        $this->dataEventManager->sync($func);
     }
 }

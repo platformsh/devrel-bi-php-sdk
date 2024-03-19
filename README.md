@@ -62,6 +62,12 @@ services:
 
     Platformsh\DevRelBIPhpSdk\Symfony\DataLogger:
         autowire:
+
+    Platformsh\DevRelBIPhpSdk\RequestManager:
+        autowire: true
+
+    Platformsh\DevRelBIPhpSdk\Symfony\MessageHandler\AsyncDataStorageHandler:
+        autowire: true
 ```
 
 **3/ Custom tracking from controller**
@@ -77,4 +83,54 @@ public function landing(
     $dataLogger->log('landing-page-form-submitted');
     ..
 }
+```
+
+**4/ Enable async**
+
+```
+composer require symfony/messenger symfony/redis-messenger
+```
+
+Provide a callback that will dispath the message instead of synchronously syncing them
+
+```
+<?php
+
+namespace App\EventSubscriber;
+
+use App\Entity\User;
+use Platformsh\DevRelBIPhpSdk\Symfony\EventSubscriber\DataEventSubscriber;
+use Platformsh\DevRelBIPhpSdk\Symfony\Message\AsyncDataStorage;
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+
+class DataSubscriber extends DataEventSubscriber
+{
+    public function __construct(
+        private HttpClientInterface $client,
+        protected Security $security,
+        private MessageBusInterface $bus,
+        protected array $eventDataList = [],
+        protected ?string $userId = null
+    ) {
+        parent::__construct(
+            client: $client,
+            security: $security,
+            eventDataList: $eventDataList,
+            userId: $userId
+        );
+    }
+
+
+    protected function sync(?callable $func = null): void
+    {
+        $func = function (string $projectName, array $processedEventDataList): void {
+            $this->bus->dispatch(new AsyncDataStorage($projectName, $processedEventDataList));
+        };
+
+        $this->dataEventManager->sync($func);
+    }
+
 ```
