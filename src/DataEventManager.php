@@ -12,6 +12,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 class DataEventManager
 {
     private string $projectName;
+    private RequestManager $requestManager;
 
     public function __construct(
         private HttpClientInterface $client,
@@ -23,6 +24,8 @@ class DataEventManager
         if (empty($this->projectName)) {
             return;
         }
+
+        $this->requestManager = new RequestManager($client);
 
         if ($this->shouldLogPageviews() && !$this->isProfiling()) {
             $this->track(EventData::new('pageview'));
@@ -43,30 +46,23 @@ class DataEventManager
         $this->sharedData = $sharedData;
     }
 
-    public function sync(): ?ResponseInterface
+    public function sync(?callable $func = null): void
     {
         if (!$this->checkConfiguration()) {
-            return null;
+            return;
         }
 
-        try {
-            return $this->client->request(
-                'POST',
-                $_ENV['DEVREL_DATA_PIPELINE_ENDPOINT'] . '/data/' . $this->projectName . '/batch',
-                [
-                    'timeout' => 1.0,
-                    'headers' => [
-                        'Accept' => 'application/json',
-                    ],
-                    'auth_bearer' => $_ENV['DEVREL_DATA_PIPELINE_TOKEN'],
-                    'json' => $this->processEventDataList(),
-                ]
-            );
-        } catch (TransportExceptionInterface $e) {
-            // ...
+        if (is_callable($func)) {
+            $func($this->projectName, $this->processEventDataList());
+            return;
         }
 
-        return null;
+        $this->postRequest($this->processEventDataList());
+    }
+
+    private function postRequest(array $processedEventDataList): void
+    {
+        $this->requestManager->batch($this->projectName,  $processedEventDataList);
     }
 
     private function processEventDataList(): array
